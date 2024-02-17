@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import axios from "axios";
-import { setHours, setMinutes } from "date-fns";
+import { setHours, } from "date-fns";
 
 const SchedulePage = () => {
   const [date, setDate] = useState(new Date());
@@ -86,7 +86,9 @@ const SchedulePage = () => {
   };
 
   return (
-    <>
+    <div className="mt-4 mx-3 lg:px-32">
+      <div className="text-2xl mb-2 px-2 font-semibold">Schedule a Mass</div>
+      <hr></hr>
       <form className="px-2" onSubmit={handleSubmit}>
         <div className="grid grid-cols-2 gap-2">
           <div className="mt-3">
@@ -199,13 +201,13 @@ const SchedulePage = () => {
         </div>
 
         <button
-          className="mt-5 font-semibold text-slate-50 bg-black mx-auto px-5 py-2 rounded-xl"
+          className="mt-5 font-semibold text-slate-50 bg-black mx-auto px-5 py-2 rounded-xl hover:bg-white hover:text-black hover:border-2"
           type="submit"
         >
           Submit
         </button>
       </form>
-    </>
+    </div>
   );
 };
 

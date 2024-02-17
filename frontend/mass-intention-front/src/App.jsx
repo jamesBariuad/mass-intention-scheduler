@@ -1,15 +1,13 @@
 import { useState } from "react";
 import "./App.css";
 import NavBar from "./components/NavBar";
-import HomePage from "./components/HomePage";
-import SchedulePage from "./components/SchedulePage";
+import { Outlet } from "react-router-dom";
 
 function App() {
   return (
     <div className="flex flex-col">
       <NavBar />
-      {/* <HomePage /> */}
-      <SchedulePage/>
+      <Outlet/>
     </div>
   );
 }
