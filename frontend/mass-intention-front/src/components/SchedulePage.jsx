@@ -2,14 +2,17 @@ import React, { useState, useEffect } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import axios from "axios";
-import { setHours, } from "date-fns";
+import { setHours } from "date-fns";
+import LoadingOverlay from "./LoadingOverlay";
 
 const SchedulePage = () => {
   const [date, setDate] = useState(new Date());
   const [disabledTimes, setDisabledTimes] = useState([]);
+  const [loading, setLoading] = useState(false);
   const serverURL = "http://localhost:8080";
 
   const getServerData = () => {
+    setLoading(true);
     axios
       .get(`${serverURL}/api/futureSchedules`)
       .then((response) => {
@@ -31,7 +34,8 @@ const SchedulePage = () => {
       })
       .catch((error) => {
         console.error("Error fetching disabled times:", error);
-      });
+      })
+      .finally(setLoading(false));
   };
 
   useEffect(() => {
@@ -67,7 +71,7 @@ const SchedulePage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     const data = Object.fromEntries(new FormData(e.target).entries());
-    e.target.reset()
+    e.target.reset();
     try {
       const response = await axios.post(`${serverURL}/api/scheduleAMass`, {
         firstName: data.firstName,
@@ -86,128 +90,130 @@ const SchedulePage = () => {
   };
 
   return (
-    <div className="mt-4 mx-3 lg:px-32">
-      <div className="text-2xl mb-2 px-2 font-semibold">Schedule a Mass</div>
-      <hr></hr>
-      <form className="px-2" onSubmit={handleSubmit}>
-        <div className="grid grid-cols-2 gap-2">
+    <>
+      <div className="mt-4 mx-3 px-2 lg:px-32">
+        <div className="text-2xl mb-2  font-semibold">Schedule a Mass</div>
+        <hr></hr>
+        <form onSubmit={handleSubmit}>
+          <div className="grid grid-cols-2 gap-2">
+            <div className="mt-3">
+              <label
+                className="block mb-2 text-sm font-medium text-gray-900"
+                htmlFor="firstName"
+              >
+                First Name:
+              </label>
+              <input
+                className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-black-500 block w-full p-2.5"
+                type="text"
+                name="firstName"
+                id="firstName"
+                required
+                placeholder="Enter First Name"
+              />
+            </div>
+            <div className="mt-3">
+              <label
+                className="block mb-2 text-sm font-medium text-gray-900"
+                htmlFor="lastName"
+              >
+                Last Name:
+              </label>
+              <input
+                className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-black-500 block w-full p-2.5"
+                type="text"
+                name="lastName"
+                id="lastName"
+                required
+                placeholder="Enter Last Name"
+              />
+            </div>
+          </div>
+
           <div className="mt-3">
             <label
               className="block mb-2 text-sm font-medium text-gray-900"
-              htmlFor="firstName"
+              htmlFor="contactNumber"
             >
-              First Name:
+              Contact Number:
+            </label>
+            <input
+              className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-black-500 block w-full p-2.5"
+              type="tel"
+              name="contactNumber"
+              id="contactNumber"
+              required
+              placeholder="+6391 234 6789"
+            />
+          </div>
+
+          <div className="mt-3">
+            <label
+              className="block mb-2 text-sm font-medium text-gray-900"
+              htmlFor="intention"
+            >
+              Intention:
             </label>
             <input
               className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-black-500 block w-full p-2.5"
               type="text"
-              name="firstName"
-              id="firstName"
+              name="intention"
+              id="intention"
               required
-              placeholder="Enter First Name"
+              placeholder="Enter name(s) of person(s) or family"
             />
           </div>
+
           <div className="mt-3">
             <label
               className="block mb-2 text-sm font-medium text-gray-900"
-              htmlFor="lastName"
+              htmlFor="specialComments/Instructions"
             >
-              Last Name:
+              Special Comments or Instructions Regarding Intention:
             </label>
-            <input
-              className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-black-500 block w-full p-2.5"
-              type="text"
-              name="lastName"
-              id="lastName"
-              required
-              placeholder="Enter Last Name"
+            <textarea
+              className="block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500"
+              type="textarea"
+              name="specialComments/Instructions"
+              id="specialComments/Instructions"
+              rows="4"
+              placeholder="I.e., Birthday, Repose of a soul, number of Masses, etc."
             />
           </div>
-        </div>
 
-        <div className="mt-3">
-          <label
-            className="block mb-2 text-sm font-medium text-gray-900"
-            htmlFor="contactNumber"
+          <div className="mt-3">
+            <label
+              className="block mb-2 text-sm font-medium text-gray-900"
+              htmlFor="date"
+            >
+              Date and Time for the Mass:
+            </label>
+            <DatePicker
+              id="date"
+              className="block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500"
+              showIcon
+              selected={date}
+              onChange={(date) => setDate(date)}
+              showTimeSelect
+              timeInputLabel="Time:"
+              dateFormat="MM/dd/yyyy h:mm aa"
+              popperPlacement="top-end"
+              minDate={new Date()}
+              minTime={setHours(new Date(), 8)} // Min time at 8:00 AM
+              maxTime={setHours(new Date(), 17)} // Max time at 5:00 PM
+              filterTime={filterTime}
+            />
+          </div>
+
+          <button
+            className="mt-5 font-semibold text-slate-50 bg-black mx-auto px-5 py-2 rounded-xl hover:bg-white hover:text-black hover:border-2"
+            type="submit"
           >
-            Contact Number:
-          </label>
-          <input
-            className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-black-500 block w-full p-2.5"
-            type="tel"
-            name="contactNumber"
-            id="contactNumber"
-            required
-            placeholder="+6391 234 6789"
-          />
-        </div>
-
-        <div className="mt-3">
-          <label
-            className="block mb-2 text-sm font-medium text-gray-900"
-            htmlFor="intention"
-          >
-            Intention:
-          </label>
-          <input
-            className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-black-500 block w-full p-2.5"
-            type="text"
-            name="intention"
-            id="intention"
-            required
-            placeholder="Enter name(s) of person(s) or family"
-          />
-        </div>
-
-        <div className="mt-3">
-          <label
-            className="block mb-2 text-sm font-medium text-gray-900"
-            htmlFor="specialComments/Instructions"
-          >
-            Special Comments or Instructions Regarding Intention:
-          </label>
-          <textarea
-            className="block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500"
-            type="textarea"
-            name="specialComments/Instructions"
-            id="specialComments/Instructions"
-            rows="4"
-            placeholder="I.e., Birthday, Repose of a soul, number of Masses, etc."
-          />
-        </div>
-
-        <div className="mt-3">
-          <label
-            className="block mb-2 text-sm font-medium text-gray-900"
-            htmlFor="date"
-          >
-            Date and Time for the Mass:
-          </label>
-          <DatePicker
-            id="date"
-            className="block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500"
-            showIcon
-            selected={date}
-            onChange={(date) => setDate(date)}
-            showTimeSelect
-            timeInputLabel="Time:"
-            dateFormat="MM/dd/yyyy h:mm aa"
-            popperPlacement="top-end"
-            minDate={new Date()}
-            minTime={setHours(new Date(), 8)} // Min time at 8:00 AM
-            maxTime={setHours(new Date(), 17)} // Max time at 5:00 PM
-            filterTime={filterTime}
-          />
-        </div>
-
-        <button
-          className="mt-5 font-semibold text-slate-50 bg-black mx-auto px-5 py-2 rounded-xl hover:bg-white hover:text-black hover:border-2"
-          type="submit"
-        >
-          Submit
-        </button>
-      </form>
-    </div>
+            Submit
+          </button>
+        </form>
+      </div>
+    </>
   );
 };
 
