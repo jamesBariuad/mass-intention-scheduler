@@ -1,54 +1,21 @@
 import React, { useState } from "react";
 import axios from "axios";
-import { saveAs } from "file-saver";
-import * as XLSX from "xlsx";
+
 import LoadingOverlay from "./LoadingOverlay";
+import ScheduleList from "./ScheduleList";
 
 const PrintSchedulePage = () => {
   const [loading, setLoading] = useState(false);
+  const [data, setData] = useState([]);
   const serverURL = "http://localhost:8080";
 
-  const convertDate = (dateString) => {
-    const date = new Date(dateString);
-    return date.toLocaleString();
-  };
 
-  const printData = (data) => {
-    if (data.length === 0) {
-      return alert("No schedules found!");
-    } else {
-      // Remove _id and __v keys from each object
-      const formattedData = data.map((item) => {
-        delete item._id;
-        delete item.__v;
-        item.date = convertDate(item.date);
-        return item;
-      });
-
-      // Arrange by date oldest first
-      formattedData.sort((a, b) => {
-        return new Date(a.date) - new Date(b.date);
-      });
-
-      // Convert data to Excel format
-      const worksheet = XLSX.utils.json_to_sheet(formattedData);
-      const workbook = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(workbook, worksheet, "Schedule Data");
-
-      // Save Excel file
-      const excelBuffer = XLSX.write(workbook, {
-        bookType: "xlsx",
-        type: "array",
-      });
-      const excelBlob = new Blob([excelBuffer], {
-        type: "excel",
-      });
-      saveAs(excelBlob, "schedule_data.xlsx");
-    }
-  };
+  
 
   const handleSubmit = (e) => {
     e.preventDefault();
+   
+
     const formData = Object.fromEntries(new FormData(e.target).entries());
     setLoading(true);
 
@@ -62,13 +29,17 @@ const PrintSchedulePage = () => {
       .then((response) => {
         // Handle the response data
         console.log(response.data);
-        printData(response.data);
+        setData(response.data);
+        if (response.data.length === 0) return alert("No schedules found!"); 
+        // printData(response.data);
       })
       .catch((error) => {
         // Handle errors
         console.error("Error fetching data:", error);
       })
-      .finally(()=>setLoading(false));
+      .finally(() => setLoading(false));
+
+     
   };
 
   return (
@@ -80,46 +51,48 @@ const PrintSchedulePage = () => {
           </div>
           <hr />
 
-          <div className="mt-3">
-            <label
-              htmlFor="startDate"
-              className="block mb-2 text-sm font-medium text-gray-900"
-            >
-              Start Date:
-            </label>
-            <input
-              type="date"
-              name="startDate"
-              id="startDate"
-              className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-black-500 block w-full p-2.5"
-              required
-            />
-          </div>
+          <div className="flex gap-10">
+            <div className="mt-3">
+              <label
+                htmlFor="startDate"
+                className="block mb-2 text-sm font-medium text-gray-900"
+              >
+                Start Date:
+              </label>
+              <input
+                type="date"
+                name="startDate"
+                id="startDate"
+                className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-black-500 block w-full p-2.5"
+                required
+              />
+            </div>
 
-          <div className="mt-3">
-            <label
-              htmlFor="endDate"
-              className="block mb-2 text-sm font-medium text-gray-900"
-            >
-              End Date:
-            </label>
-            <input
-              type="date"
-              name="endDate"
-              id="endDate"
-              className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-black-500 block w-full p-2.5"
-              required
-            />
+            <div className="mt-3">
+              <label
+                htmlFor="endDate"
+                className="block mb-2 text-sm font-medium text-gray-900"
+              >
+                End Date:
+              </label>
+              <input
+                type="date"
+                name="endDate"
+                id="endDate"
+                className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-black-500 block w-full p-2.5"
+                required
+              />
+            </div>
           </div>
-
           <button
             type="submit"
-            className="float-end mt-5 font-semibold text-slate-50 bg-black mx-auto px-5 py-2 rounded-xl hover:bg-white hover:text-black hover:border-2"
+            className="my-5 ms-60 font-semibold text-slate-50 bg-black py-3 px-4  rounded-xl hover:bg-white hover:text-black hover:border-2"
           >
             Submit
           </button>
         </form>
       </div>
+      {data.length !== 0 && <ScheduleList data={data} />}
       {loading && <LoadingOverlay />}
     </>
   );
